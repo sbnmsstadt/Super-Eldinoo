@@ -42,24 +42,50 @@ window.addEventListener('keydown', e => keys[e.code] = true);
 window.addEventListener('keyup', e => keys[e.code] = false);
 
 // Tilemap (0: air, 1: ground/grass, 2: brick, 3: pipe, 4: coin)
-const map = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 4, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 4, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 4, 4, 4, 0, 2, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-];
+// Initial map (400 columns) - to be extended programmatically
+const map = [];
+function initMap() {
+    for (let r = 0; r < 15; r++) {
+        map[r] = new Array(400).fill(0);
+    }
+
+    // Procedural generation across 400 columns
+    for (let c = 0; c < 400; c++) {
+        // Ground (with some holes/pits)
+        if (c < 10 || c > 390 || Math.random() > 0.1) {
+            map[13][c] = 1;
+            map[14][c] = 1;
+        }
+
+        // Random Features
+        if (c > 5 && c % 12 === 0) { // Pipes
+            if (map[13][c] === 1) { // Only place pipe on ground
+                map[11][c] = 3;
+                map[12][c] = 3;
+                if (Math.random() > 0.5) map[10][c] = 4; // Coin on top of some pipes
+            }
+        }
+
+        if (c > 2 && c % 8 === 0) { // Platforms / Bricks
+            let h = 7 + Math.floor(Math.random() * 3);
+            let len = 2 + Math.floor(Math.random() * 4);
+            for (let i = 0; i < len; i++) {
+                if (c + i < 400) {
+                    map[h][c + i] = 2;
+                    if (Math.random() > 0.7) map[h - 1][c + i] = 4; // Coin on top
+                }
+            }
+        }
+
+        if (c > 20 && c % 20 === 0) { // High coin clusters
+            map[4][c] = 4;
+            map[4][c + 1] = 4;
+            map[3][c] = 4;
+            map[3][c + 1] = 4;
+        }
+    }
+}
+initMap();
 
 const player = {
     x: 100,
@@ -69,7 +95,9 @@ const player = {
     dx: 0,
     dy: 0,
     grounded: false,
-    jumpCount: 0
+    jumpCount: 0,
+    isBig: true,
+    invincible: 0
 };
 
 class Enemy {
@@ -157,6 +185,37 @@ class FlyingEnemy extends Enemy {
 
 let enemies = [];
 
+class Cloud {
+    constructor(x, y, scale) {
+        this.x = x;
+        this.y = y;
+        this.scale = scale;
+        this.speed = scale * 0.5; // Parallax speed
+    }
+
+    draw() {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.arc(this.x - (cameraX * this.speed * 0.2), this.y, 20 * this.scale, 0, Math.PI * 2);
+        ctx.arc(this.x + 15 * this.scale - (cameraX * this.speed * 0.2), this.y - 10 * this.scale, 20 * this.scale, 0, Math.PI * 2);
+        ctx.arc(this.x + 30 * this.scale - (cameraX * this.speed * 0.2), this.y, 20 * this.scale, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+let clouds = [];
+
+function initClouds() {
+    clouds = [];
+    for (let i = 0; i < 80; i++) {
+        clouds.push(new Cloud(
+            Math.random() * 13000,
+            Math.random() * 250,
+            0.5 + Math.random() * 1.5
+        ));
+    }
+}
+
 function resetGame() {
     score = 0;
     coins = 0;
@@ -167,24 +226,29 @@ function resetGame() {
     player.y = 350;
     player.dx = 0;
     player.dy = 0;
+    player.isBig = true;
+    player.invincible = 0;
+    player.width = 48;
+    player.height = 96;
     scoreEl.innerText = score;
     coinsEl.innerText = coins;
     startScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
     winScreen.classList.add('hidden');
 
-    // Spawn enemies
-    enemies = [
-        new Enemy(600, 350),
-        new Enemy(1200, 350),
-        new Enemy(1800, 350),
-        new Enemy(2200, 250),
-        new Enemy(2800, 350),
-        // Add flying monsters
-        new FlyingEnemy(900, 150),
-        new FlyingEnemy(1500, 200),
-        new FlyingEnemy(2500, 100)
-    ];
+    // Spawn enemies across the 400 columns
+    enemies = [];
+    for (let i = 0; i < 25; i++) {
+        let ex = 500 + i * 500 + Math.random() * 200;
+        if (Math.random() > 0.3) {
+            enemies.push(new Enemy(ex, 350));
+        } else {
+            enemies.push(new FlyingEnemy(ex, 100 + Math.random() * 200));
+        }
+    }
+
+    // Initialize clouds
+    initClouds();
 
     // Reiniciar mapa para monedas
     for (let r = 0; r < map.length; r++) {
@@ -219,6 +283,8 @@ function update() {
     checkCollisions();
 
     // Enemy logic
+    if (player.invincible > 0) player.invincible--;
+
     enemies.forEach(enemy => {
         enemy.update();
 
@@ -235,8 +301,15 @@ function update() {
                 player.dy = JUMP_FORCE / 1.5; // Small bounce
                 score += 500;
                 scoreEl.innerText = score;
-            } else {
-                endGame();
+            } else if (player.invincible <= 0) {
+                if (player.isBig) {
+                    player.isBig = false;
+                    player.invincible = 120; // ~2 seconds at 60fps
+                    player.width = 32;
+                    player.height = 64;
+                } else {
+                    endGame();
+                }
             }
         }
     });
@@ -250,7 +323,7 @@ function update() {
     if (player.y > CANVAS_HEIGHT) endGame();
 
     // Win condition (reaching end of map)
-    if (player.x > (map[0].length * TILE_SIZE) - 100) {
+    if (player.x > (map[0].length * TILE_SIZE) - 150) {
         winGame();
     }
 }
@@ -318,6 +391,14 @@ function draw() {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     ctx.save();
+
+    // Draw sky background color
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Draw Clouds (Background)
+    clouds.forEach(cloud => cloud.draw());
+
     ctx.translate(-cameraX, 0);
 
     // Draw Map
@@ -327,7 +408,15 @@ function draw() {
             if (tile === 0 || tile === 5) continue;
 
             if (tile === 4) { // Coin
-                ctx.drawImage(coinImg, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                if (coinImg.complete) {
+                    ctx.drawImage(coinImg, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                } else {
+                    // Fallback yellow circle
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(c * TILE_SIZE + TILE_SIZE / 2, r * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             } else {
                 // Determine source coordinates from tilesImg (assuming 1x3 grid for ground, brick, pipe)
                 // If the generated image is complex, we might need adjustments
@@ -348,11 +437,13 @@ function draw() {
     }
 
     // Draw Player
-    if (playerImg.complete) {
-        ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-    } else {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(player.x, player.y, player.width, player.height);
+    if (player.invincible % 10 < 5) { // Flickering effect
+        if (playerImg.complete) {
+            ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+        } else {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
     }
 
     // Draw Enemies
@@ -381,8 +472,8 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-startBtn.addEventListener('click', resetGame);
-restartBtn.addEventListener('click', resetGame);
-winRestartBtn.addEventListener('click', resetGame);
+startBtn.addEventListener('click', () => { console.log('Start clicked'); resetGame(); });
+restartBtn.addEventListener('click', () => { console.log('Restart clicked'); resetGame(); });
+winRestartBtn.addEventListener('click', () => { console.log('Win Restart clicked'); resetGame(); });
 
 gameLoop();
