@@ -7,6 +7,9 @@ const gameOverScreen = document.getElementById('game-over-screen');
 const startBtn = document.getElementById('start-button');
 const restartBtn = document.getElementById('restart-button');
 const finalScoreEl = document.getElementById('final-score');
+const winScreen = document.getElementById('win-screen');
+const winScoreEl = document.getElementById('win-score');
+const winRestartBtn = document.getElementById('win-restart-button');
 
 // Game constants
 const TILE_SIZE = 32;
@@ -112,10 +115,10 @@ class Enemy {
     draw() {
         if (!this.alive) return;
         if (monsterImg.complete) {
-            ctx.drawImage(monsterImg, this.x - cameraX, this.y, this.width, this.height);
+            ctx.drawImage(monsterImg, this.x, this.y, this.width, this.height);
         } else {
             ctx.fillStyle = 'purple';
-            ctx.fillRect(this.x - cameraX, this.y, this.width, this.height);
+            ctx.fillRect(this.x, this.y, this.width, this.height);
         }
     }
 }
@@ -168,6 +171,7 @@ function resetGame() {
     coinsEl.innerText = coins;
     startScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
+    winScreen.classList.add('hidden');
 
     // Spawn enemies
     enemies = [
@@ -247,8 +251,7 @@ function update() {
 
     // Win condition (reaching end of map)
     if (player.x > (map[0].length * TILE_SIZE) - 100) {
-        // Simple win
-        endGame();
+        winGame();
     }
 }
 
@@ -358,6 +361,13 @@ function draw() {
     ctx.restore();
 }
 
+function winGame() {
+    isGameOver = true;
+    isGameRunning = false;
+    winScoreEl.innerText = score;
+    winScreen.classList.remove('hidden');
+}
+
 function endGame() {
     isGameOver = true;
     isGameRunning = false;
@@ -373,5 +383,6 @@ function gameLoop() {
 
 startBtn.addEventListener('click', resetGame);
 restartBtn.addEventListener('click', resetGame);
+winRestartBtn.addEventListener('click', resetGame);
 
 gameLoop();
