@@ -50,7 +50,9 @@ canvas {
     z-index: 10;
 }
 
-#start-screen, #game-over-screen {
+#start-screen,
+#game-over-screen,
+#win-screen {
     background: rgba(22, 27, 34, 0.9);
     padding: 2rem;
     border-radius: 12px;
