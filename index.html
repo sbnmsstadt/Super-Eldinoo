@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Fatihoo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>SUPER FATIHOO</h1>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="480"></canvas>
+
+        <div id="hud">
+            <div>SCORE: <span id="score">0</span></div>
+            <div>COINS: <span id="coins">0</span></div>
+        </div>
+
+        <div id="ui-overlay">
+            <div id="start-screen">
+                <h2>Bist du bereit?</h2>
+                <p>Nutze die Pfeiltasten zum Bewegen und Springen.</p>
+                <button id="start-button">SPIEL STARTEN</button>
+            </div>
+
+            <div id="game-over-screen" class="hidden">
+                <h2>GAME OVER</h2>
+                <p>Dein Score: <span id="final-score">0</span></p>
+                <button id="restart-button">ERNEUT VERSUCHEN</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>
