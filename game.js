@@ -4,7 +4,8 @@ const scoreEl = document.getElementById('score');
 const coinsEl = document.getElementById('coins');
 const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
-const startBtn = document.getElementById('start-button');
+const startBtn1 = document.getElementById('start-button-1');
+const startBtn2 = document.getElementById('start-button-2');
 const restartBtn = document.getElementById('restart-button');
 const finalScoreEl = document.getElementById('final-score');
 const winScreen = document.getElementById('win-screen');
@@ -27,14 +28,27 @@ let isGameRunning = false;
 let cameraX = 0;
 
 // Assets
-const playerImg = new Image();
-playerImg.src = 'assets/mario.png';
+const marioImg = new Image();
+marioImg.src = 'assets/mario.png';
+const luigiImg = new Image();
+luigiImg.src = 'assets/luigi.png';
 const tilesImg = new Image();
 tilesImg.src = 'assets/tiles.png';
 const coinImg = new Image();
 coinImg.src = 'assets/coin.png';
 const monsterImg = new Image();
 monsterImg.src = 'assets/monster.png';
+const houseImg = new Image();
+houseImg.src = 'assets/house_tile.png';
+
+// Audio assets
+const jumpSound = new Audio('sounds/jump.mp3');
+jumpSound.volume = 0.5;
+const killSound = new Audio('sounds/kill.mp3');
+const gameOverSound = new Audio('sounds/gameover.mp3');
+const bgMusic = new Audio('sounds/backgroundmusic.mp3');
+bgMusic.loop = true;
+bgMusic.volume = 0.35;
 
 // Input handling
 const keys = {};
@@ -77,28 +91,47 @@ function initMap() {
             }
         }
 
-        if (c > 20 && c % 20 === 0) { // High coin clusters
-            map[4][c] = 4;
-            map[4][c + 1] = 4;
-            map[3][c] = 4;
-            map[3][c + 1] = 4;
+        if (c > 30 && c % 45 === 0 && map[13][c] === 1) { // Houses
+            let houseWidth = 3 + Math.floor(Math.random() * 3);
+            let houseHeight = 4 + Math.floor(Math.random() * 3);
+            for (let h = 0; h < houseHeight; h++) {
+                for (let w = 0; w < houseWidth; w++) {
+                    if (c + w < 400) {
+                        map[12 - h][c + w] = 6; // House tile
+                    }
+                }
+            }
+            // Add a roof (optional detail)
+            for (let w = -1; w <= houseWidth; w++) {
+                if (c + w >= 0 && c + w < 400) {
+                    map[12 - houseHeight][c + w] = 6;
+                }
+            }
         }
     }
 }
 initMap();
 
-const player = {
-    x: 100,
-    y: 300,
-    width: 48,  // Adjusted for 495x978 asset aspect ratio (approx 1:2)
-    height: 96, // Adjusted for 495x978 asset aspect ratio
-    dx: 0,
-    dy: 0,
-    grounded: false,
-    jumpCount: 0,
-    isBig: true,
-    invincible: 0
-};
+let players = [];
+let isTwoPlayerMode = false;
+
+function createPlayer(x, y, img, controls) {
+    return {
+        x: x,
+        y: y,
+        width: 48,
+        height: 96,
+        dx: 0,
+        dy: 0,
+        grounded: false,
+        jumpCount: 0,
+        isBig: true,
+        invincible: 0,
+        img: img,
+        controls: controls,
+        alive: true
+    };
+}
 
 class Enemy {
     constructor(x, y) {
@@ -216,20 +249,31 @@ function initClouds() {
     }
 }
 
-function resetGame() {
+function resetGame(twoPlayer = false) {
     score = 0;
     coins = 0;
     isGameOver = false;
     isGameRunning = true;
+    isTwoPlayerMode = twoPlayer;
     cameraX = 0;
-    player.x = 100;
-    player.y = 350;
-    player.dx = 0;
-    player.dy = 0;
-    player.isBig = true;
-    player.invincible = 0;
-    player.width = 48;
-    player.height = 96;
+
+    players = [];
+    // P1 Mario (WASD)
+    players.push(createPlayer(100, 350, marioImg, {
+        up: 'KeyW',
+        left: 'KeyA',
+        right: 'KeyD'
+    }));
+
+    if (isTwoPlayerMode) {
+        // P2 Luigi (Arrows)
+        players.push(createPlayer(150, 350, luigiImg, {
+            up: 'ArrowUp',
+            left: 'ArrowLeft',
+            right: 'ArrowRight'
+        }));
+    }
+
     scoreEl.innerText = score;
     coinsEl.innerText = coins;
     startScreen.classList.add('hidden');
@@ -250,6 +294,10 @@ function resetGame() {
     // Initialize clouds
     initClouds();
 
+    // Start background music
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(e => console.log("Audio play blocked:", e));
+
     // Reiniciar mapa para monedas
     for (let r = 0; r < map.length; r++) {
         for (let c = 0; c < map[r].length; c++) {
@@ -261,74 +309,84 @@ function resetGame() {
 function update() {
     if (!isGameRunning || isGameOver) return;
 
-    // Movement
-    if (keys['ArrowRight']) player.dx = MOVE_SPEED;
-    else if (keys['ArrowLeft']) player.dx = -MOVE_SPEED;
-    else player.dx = 0;
+    players.forEach(player => {
+        if (!player.alive) return;
 
-    if (keys['ArrowUp'] && player.grounded) {
-        player.dy = JUMP_FORCE;
-        player.grounded = false;
-    }
+        // Movement
+        if (keys[player.controls.right]) player.dx = MOVE_SPEED;
+        else if (keys[player.controls.left]) player.dx = -MOVE_SPEED;
+        else player.dx = 0;
 
-    // Apply gravity
-    player.dy += GRAVITY;
-    player.x += player.dx;
-    player.y += player.dy;
+        if (keys[player.controls.up] && player.grounded) {
+            player.dy = JUMP_FORCE;
+            player.grounded = false;
+            jumpSound.currentTime = 0;
+            jumpSound.play().catch(e => console.log("Audio play blocked:", e));
+        }
 
-    // Boundary check
-    if (player.x < 0) player.x = 0;
+        // Apply gravity
+        player.dy += GRAVITY;
+        player.x += player.dx;
+        player.y += player.dy;
 
-    // Tile collisions
-    checkCollisions();
+        // Boundary check
+        if (player.x < 0) player.x = 0;
 
-    // Enemy logic
-    if (player.invincible > 0) player.invincible--;
+        // Tile collisions
+        checkCollisions(player);
+
+        if (player.invincible > 0) player.invincible--;
+
+        // Death by falling
+        if (player.y > CANVAS_HEIGHT) endGame();
+
+        // Win condition
+        if (player.x > (map[0].length * TILE_SIZE) - 150) {
+            winGame();
+        }
+    });
 
     enemies.forEach(enemy => {
         enemy.update();
 
         // Player-Enemy collision
-        if (enemy.alive &&
-            player.x < enemy.x + enemy.width &&
-            player.x + player.width > enemy.x &&
-            player.y < enemy.y + enemy.height &&
-            player.y + player.height > enemy.y) {
+        players.forEach(player => {
+            if (!player.alive) return;
+            if (enemy.alive &&
+                player.x < enemy.x + enemy.width &&
+                player.x + player.width > enemy.x &&
+                player.y < enemy.y + enemy.height &&
+                player.y + player.height > enemy.y) {
 
-            // Check if jumping on top
-            if (player.dy > 0 && player.y + player.height < enemy.y + enemy.height / 2) {
-                enemy.alive = false;
-                player.dy = JUMP_FORCE / 1.5; // Small bounce
-                score += 500;
-                scoreEl.innerText = score;
-            } else if (player.invincible <= 0) {
-                if (player.isBig) {
-                    player.isBig = false;
-                    player.invincible = 120; // ~2 seconds at 60fps
-                    player.width = 32;
-                    player.height = 64;
-                } else {
-                    endGame();
+                // Check if jumping on top
+                if (player.dy > 0 && player.y + player.height < enemy.y + enemy.height / 2) {
+                    enemy.alive = false;
+                    killSound.currentTime = 0;
+                    killSound.play().catch(e => console.log("Audio play blocked:", e));
+                    player.dy = JUMP_FORCE / 1.5; // Small bounce
+                    score += 500;
+                    scoreEl.innerText = score;
+                } else if (player.invincible <= 0) {
+                    if (player.isBig) {
+                        player.isBig = false;
+                        player.invincible = 120; // ~2 seconds at 60fps
+                        player.width = 32;
+                        player.height = 64;
+                    } else {
+                        endGame();
+                    }
                 }
             }
-        }
+        });
     });
 
-    // Camera following
-    if (player.x > CANVAS_WIDTH / 2) {
-        cameraX = player.x - CANVAS_WIDTH / 2;
-    }
-
-    // Death by falling (if map had holes)
-    if (player.y > CANVAS_HEIGHT) endGame();
-
-    // Win condition (reaching end of map)
-    if (player.x > (map[0].length * TILE_SIZE) - 150) {
-        winGame();
+    // Camera following (follows first player)
+    if (players[0] && players[0].x > CANVAS_WIDTH / 2) {
+        cameraX = players[0].x - CANVAS_WIDTH / 2;
     }
 }
 
-function checkCollisions() {
+function checkCollisions(player) {
     player.grounded = false;
 
     // Check tiles around player
@@ -428,6 +486,18 @@ function draw() {
                 // Check if tilesImg width is enough, otherwise fallback to color
                 if (tilesImg.complete && tilesImg.width >= (sx + 32)) {
                     ctx.drawImage(tilesImg, sx, 0, 32, 32, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                } else if (tile === 6) { // House
+                    if (houseImg.complete) {
+                        ctx.drawImage(houseImg, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    } else {
+                        ctx.fillStyle = '#A52A2A'; // Brown/Red for house
+                        ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        // Add some "window" details
+                        if ((c + r) % 2 === 0) {
+                            ctx.fillStyle = '#87CEEB';
+                            ctx.fillRect(c * TILE_SIZE + 8, r * TILE_SIZE + 8, 16, 16);
+                        }
+                    }
                 } else {
                     ctx.fillStyle = tile === 1 ? '#8B4513' : (tile === 2 ? '#B22222' : '#228B22');
                     ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -436,15 +506,18 @@ function draw() {
         }
     }
 
-    // Draw Player
-    if (player.invincible % 10 < 5) { // Flickering effect
-        if (playerImg.complete) {
-            ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-        } else {
-            ctx.fillStyle = 'red';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+    // Draw Players
+    players.forEach(player => {
+        if (!player.alive) return;
+        if (player.invincible % 10 < 5) { // Flickering effect
+            if (player.img.complete) {
+                ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+            } else {
+                ctx.fillStyle = player === players[0] ? 'red' : 'green';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
         }
-    }
+    });
 
     // Draw Enemies
     enemies.forEach(enemy => enemy.draw());
@@ -455,6 +528,7 @@ function draw() {
 function winGame() {
     isGameOver = true;
     isGameRunning = false;
+    bgMusic.pause();
     winScoreEl.innerText = score;
     winScreen.classList.remove('hidden');
 }
@@ -462,6 +536,9 @@ function winGame() {
 function endGame() {
     isGameOver = true;
     isGameRunning = false;
+    bgMusic.pause();
+    gameOverSound.currentTime = 0;
+    gameOverSound.play().catch(e => console.log("Audio play blocked:", e));
     finalScoreEl.innerText = score;
     gameOverScreen.classList.remove('hidden');
 }
@@ -472,8 +549,9 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-startBtn.addEventListener('click', () => { console.log('Start clicked'); resetGame(); });
-restartBtn.addEventListener('click', () => { console.log('Restart clicked'); resetGame(); });
-winRestartBtn.addEventListener('click', () => { console.log('Win Restart clicked'); resetGame(); });
+startBtn1.addEventListener('click', () => { console.log('1 Player clicked'); resetGame(false); });
+startBtn2.addEventListener('click', () => { console.log('2 Player clicked'); resetGame(true); });
+restartBtn.addEventListener('click', () => { console.log('Restart clicked'); resetGame(isTwoPlayerMode); });
+winRestartBtn.addEventListener('click', () => { console.log('Win Restart clicked'); resetGame(isTwoPlayerMode); });
 
 gameLoop();
