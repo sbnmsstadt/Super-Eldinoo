@@ -445,6 +445,69 @@ function initClouds() {
     }
 }
 
+class Building {
+    constructor(x, y, width, height, speed, color) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.speed = speed;
+        this.color = color;
+        this.windows = [];
+        this.generateWindows();
+    }
+
+    generateWindows() {
+        const rows = Math.floor(this.height / 20);
+        const cols = Math.floor(this.width / 15);
+        for (let r = 1; r < rows - 1; r++) {
+            for (let c = 1; c < cols - 1; c++) {
+                if (Math.random() > 0.3) {
+                    this.windows.push({
+                        x: c * 15,
+                        y: r * 20,
+                        lit: Math.random() > 0.7
+                    });
+                }
+            }
+        }
+    }
+
+    draw() {
+        const drawX = this.x - (cameraX * this.speed);
+        if (drawX + this.width < 0 || drawX > CANVAS_WIDTH) return;
+
+        // Draw building body
+        ctx.fillStyle = this.color;
+        ctx.fillRect(drawX, this.y, this.width, this.height);
+
+        // Draw windows
+        this.windows.forEach(w => {
+            ctx.fillStyle = w.lit ? '#FFD700' : 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(drawX + w.x, this.y + w.y, 8, 12);
+        });
+    }
+}
+
+let buildings = [];
+
+function initBuildings() {
+    buildings = [];
+    const colors = ['#2c3e50', '#34495e', '#1a252f', '#2c2c2c'];
+    for (let i = 0; i < 60; i++) {
+        const width = 60 + Math.random() * 100;
+        const height = 150 + Math.random() * 300;
+        buildings.push(new Building(
+            Math.random() * 13000,
+            CANVAS_HEIGHT - height,
+            width,
+            height,
+            0.4 + Math.random() * 0.2,
+            colors[Math.floor(Math.random() * colors.length)]
+        ));
+    }
+}
+
 function resetGame(twoPlayer = false) {
     score = 0;
     coins = 0;
@@ -490,8 +553,9 @@ function resetGame(twoPlayer = false) {
         }
     }
 
-    // Initialize clouds
+    // Initialize clouds and buildings
     initClouds();
+    initBuildings();
 
     // Start background music
     bgMusic.currentTime = 0;
@@ -655,6 +719,9 @@ function draw() {
 
     // Draw Clouds (Background)
     clouds.forEach(cloud => cloud.draw());
+
+    // Draw Buildings (City Background)
+    buildings.forEach(building => building.draw());
 
     ctx.translate(-cameraX, 0);
 
