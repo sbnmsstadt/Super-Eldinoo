@@ -11,6 +11,152 @@ const finalScoreEl = document.getElementById('final-score');
 const winScreen = document.getElementById('win-screen');
 const winScoreEl = document.getElementById('win-score');
 const winRestartBtn = document.getElementById('win-restart-button');
+const settingsBtn = document.getElementById('settings-button');
+const settingsScreen = document.getElementById('settings-screen');
+const settingsBackBtn = document.getElementById('settings-back-button');
+const volumeSlider = document.getElementById('volume-slider');
+const languageSelect = document.getElementById('language-select');
+const pauseBtn = document.getElementById('pause-button');
+
+// Translation data
+const translations = {
+    de: {
+        title: "SUPER ELDINOOO",
+        startTitle: "Bist du bereit?",
+        controlsP1: "Spieler 1 (Mario): WASD",
+        controlsP2: "Spieler 2 (Luigi): Pfeiltasten",
+        btn1Player: "1 SPIELER",
+        btn2Player: "2 SPIELER",
+        settingsTitle: "EINSTELLUNGEN",
+        labelVolume: "Lautstärke Musik",
+        labelLanguage: "Sprache",
+        btnBack: "ZURÜCK",
+        btnResume: "WEITER",
+        pause: "PAUSE",
+        gameOver: "GAME OVER",
+        score: "SCORE",
+        coins: "COINS",
+        finalScore: "Dein Score",
+        btnRetry: "ERNEUT VERSUCHEN",
+        winTitle: "SIEG!",
+        winMsg: "Du hast es geschafft!",
+        btnPlayAgain: "NOCHMAL SPIELEN"
+    },
+    en: {
+        title: "SUPER ELDINOOO",
+        startTitle: "Are you ready?",
+        controlsP1: "Player 1 (Mario): WASD",
+        controlsP2: "Player 2 (Luigi): Arrow Keys",
+        btn1Player: "1 PLAYER",
+        btn2Player: "2 PLAYER",
+        settingsTitle: "SETTINGS",
+        labelVolume: "Music Volume",
+        labelLanguage: "Language",
+        btnBack: "BACK",
+        btnResume: "RESUME",
+        pause: "PAUSE",
+        gameOver: "GAME OVER",
+        score: "SCORE",
+        coins: "COINS",
+        finalScore: "Your Score",
+        btnRetry: "RETRY",
+        winTitle: "VICTORY!",
+        winMsg: "You made it!",
+        btnPlayAgain: "PLAY AGAIN"
+    },
+    bs: {
+        title: "SUPER ELDINOOO",
+        startTitle: "Jeste li spremni?",
+        controlsP1: "Igrač 1 (Mario): WASD",
+        controlsP2: "Igrač 2 (Luigi): Strelice",
+        btn1Player: "1 IGRAČ",
+        btn2Player: "2 IGRAČA",
+        settingsTitle: "POSTAVKE",
+        labelVolume: "Jačina muzike",
+        labelLanguage: "Jezik",
+        btnBack: "NAZAD",
+        btnResume: "NASTAVI",
+        pause: "PAUZA",
+        gameOver: "KRAJ IGRE",
+        score: "BODOVI",
+        coins: "NOVIĆI",
+        finalScore: "Vaš rezultat",
+        btnRetry: "POKUŠAJ PONOVO",
+        winTitle: "POBJEDA!",
+        winMsg: "Uspjeli ste!",
+        btnPlayAgain: "IGRAJ PONOVO"
+    },
+    ro: {
+        title: "SUPER ELDINOOO",
+        startTitle: "Ești gata?",
+        controlsP1: "Jucător 1 (Mario): WASD",
+        controlsP2: "Jucător 2 (Luigi): Săgeți",
+        btn1Player: "1 JUCĂTOR",
+        btn2Player: "2 JUCĂTORI",
+        settingsTitle: "SETĂRI",
+        labelVolume: "Volum Muzică",
+        labelLanguage: "Limbă",
+        btnBack: "ÎNAPOI",
+        btnResume: "CONTINUĂ",
+        pause: "PAUZĂ",
+        gameOver: "SFÂRȘITUL JOCULUI",
+        score: "SCOR",
+        coins: "MONEDE",
+        finalScore: "Scorul tău",
+        btnRetry: "REÎNCEARCĂ",
+        winTitle: "VICTORIE!",
+        winMsg: "Ai reușit!",
+        btnPlayAgain: "JOACĂ DIN NOU"
+    },
+    sr: {
+        title: "SUPER ELDINOOO",
+        startTitle: "Da li ste spremni?",
+        controlsP1: "Igrač 1 (Mario): WASD",
+        controlsP2: "Igrač 2 (Luigi): Strelice",
+        btn1Player: "1 IGRAČ",
+        btn2Player: "2 IGRAČA",
+        settingsTitle: "PODEŠAVANJA",
+        labelVolume: "Jačina muzike",
+        labelLanguage: "Jezik",
+        btnBack: "NAZAD",
+        btnResume: "NASTAVI",
+        pause: "PAUZA",
+        gameOver: "KRAJ IGRE",
+        score: "BODOVI",
+        coins: "NOVČIĆI",
+        finalScore: "Vaš rezultat",
+        btnRetry: "POKUŠAJ PONOVO",
+        winTitle: "POBEDA!",
+        winMsg: "Uspeli ste!",
+        btnPlayAgain: "IGRAJ PONOVO"
+    },
+    tr: {
+        title: "SUPER ELDINOOO",
+        startTitle: "Hazır mısın?",
+        controlsP1: "Oyuncu 1 (Mario): WASD",
+        controlsP2: "Oyuncu 2 (Luigi): Ok Tuşları",
+        btn1Player: "1 OYUNCU",
+        btn2Player: "2 OYUNCU",
+        settingsTitle: "AYARLAR",
+        labelVolume: "Müzik Sesi",
+        labelLanguage: "Dil",
+        btnBack: "GERİ",
+        btnResume: "DEVAM ET",
+        pause: "DURAKLAT",
+        gameOver: "OYUN BİTTİ",
+        score: "SKOR",
+        coins: "COINS",
+        finalScore: "Skorun",
+        btnRetry: "TEKRAR DENE",
+        winTitle: "ZAFER!",
+        winMsg: "Başardın!",
+        btnPlayAgain: "TEKRAR OYNA"
+    }
+};
+
+let currentLanguage = 'de';
+let isPaused = false;
+
 
 // Game constants
 const TILE_SIZE = 32;
@@ -43,12 +189,19 @@ houseImg.src = 'assets/house_tile.png';
 
 // Audio assets
 const jumpSound = new Audio('sounds/jump.mp3');
-jumpSound.volume = 0.5;
 const killSound = new Audio('sounds/kill.mp3');
 const gameOverSound = new Audio('sounds/gameover.mp3');
 const bgMusic = new Audio('sounds/backgroundmusic.mp3');
 bgMusic.loop = true;
-bgMusic.volume = 0.35;
+
+function updateVolumes() {
+    const vol = parseFloat(volumeSlider.value);
+    bgMusic.volume = vol;
+    jumpSound.volume = vol * 0.7;
+    killSound.volume = vol * 0.7;
+    gameOverSound.volume = vol;
+}
+updateVolumes();
 
 // Input handling
 const keys = {};
@@ -66,7 +219,24 @@ function initMap() {
     // Procedural generation across 400 columns
     for (let c = 0; c < 400; c++) {
         // Ground (with some holes/pits)
-        if (c < 10 || c > 390 || Math.random() > 0.1) {
+        // Ensure starting area is safe
+        if (c < 10 || c > 390) {
+            map[13][c] = 1;
+            map[14][c] = 1;
+        } else if (map[13][c - 1] === 1) { // If previous was ground
+            if (Math.random() > 0.12) { // 88% chance to continue ground
+                map[13][c] = 1;
+                map[14][c] = 1;
+            } else { // Start a gap
+                let gapWidth = 2 + Math.floor(Math.random() * 2); // 2-3 tiles wide
+                c += gapWidth;
+                // After gap, ensure we have ground again
+                if (c < 400) {
+                    map[13][c] = 1;
+                    map[14][c] = 1;
+                }
+            }
+        } else {
             map[13][c] = 1;
             map[14][c] = 1;
         }
@@ -111,6 +281,32 @@ function initMap() {
     }
 }
 initMap();
+
+function applyLanguage(lang) {
+    const t = translations[lang];
+    document.querySelector('h1').innerText = t.title;
+    document.querySelector('#start-screen h2').innerText = t.startTitle;
+    document.querySelector('#start-screen p').innerHTML = `${t.controlsP1}<br>${t.controlsP2}`;
+    document.getElementById('start-button-1').innerText = t.btn1Player;
+    document.getElementById('start-button-2').innerText = t.btn2Player;
+
+    document.getElementById('settings-title').innerText = isPaused ? t.pause : t.settingsTitle;
+    document.getElementById('label-volume').innerText = t.labelVolume;
+    document.getElementById('label-language').innerText = t.labelLanguage;
+    document.getElementById('settings-back-button').innerText = isPaused ? t.btnResume : t.btnBack;
+
+    document.querySelector('#game-over-screen h2').innerText = t.gameOver;
+    document.getElementById('final-score-label').innerText = t.finalScore;
+    document.getElementById('restart-button').innerText = t.btnRetry;
+
+    document.querySelector('#win-screen h2').innerText = t.winTitle;
+    document.getElementById('win-message').innerText = t.winMsg;
+    document.getElementById('win-score-label').innerText = t.finalScore;
+    document.getElementById('win-restart-button').innerText = t.btnPlayAgain;
+
+    document.getElementById('score-label').innerText = t.score;
+    document.getElementById('coins-label').innerText = t.coins;
+}
 
 let players = [];
 let isTwoPlayerMode = false;
@@ -254,8 +450,11 @@ function resetGame(twoPlayer = false) {
     coins = 0;
     isGameOver = false;
     isGameRunning = true;
+    isPaused = false;
     isTwoPlayerMode = twoPlayer;
     cameraX = 0;
+
+    pauseBtn.classList.remove('hidden');
 
     players = [];
     // P1 Mario (WASD)
@@ -307,7 +506,7 @@ function resetGame(twoPlayer = false) {
 }
 
 function update() {
-    if (!isGameRunning || isGameOver) return;
+    if (!isGameRunning || isGameOver || isPaused) return;
 
     players.forEach(player => {
         if (!player.alive) return;
@@ -528,6 +727,7 @@ function draw() {
 function winGame() {
     isGameOver = true;
     isGameRunning = false;
+    pauseBtn.classList.add('hidden');
     bgMusic.pause();
     winScoreEl.innerText = score;
     winScreen.classList.remove('hidden');
@@ -536,6 +736,7 @@ function winGame() {
 function endGame() {
     isGameOver = true;
     isGameRunning = false;
+    pauseBtn.classList.add('hidden');
     bgMusic.pause();
     gameOverSound.currentTime = 0;
     gameOverSound.play().catch(e => console.log("Audio play blocked:", e));
@@ -554,4 +755,35 @@ startBtn2.addEventListener('click', () => { console.log('2 Player clicked'); res
 restartBtn.addEventListener('click', () => { console.log('Restart clicked'); resetGame(isTwoPlayerMode); });
 winRestartBtn.addEventListener('click', () => { console.log('Win Restart clicked'); resetGame(isTwoPlayerMode); });
 
+// Settings Event Listeners
+settingsBtn.addEventListener('click', () => {
+    startScreen.classList.add('hidden');
+    settingsScreen.classList.remove('hidden');
+});
+
+settingsBackBtn.addEventListener('click', () => {
+    settingsScreen.classList.add('hidden');
+    if (isPaused) {
+        isPaused = false;
+    } else {
+        startScreen.classList.remove('hidden');
+    }
+});
+
+pauseBtn.addEventListener('click', () => {
+    if (isGameRunning && !isGameOver) {
+        isPaused = true;
+        settingsScreen.classList.remove('hidden');
+        applyLanguage(currentLanguage);
+    }
+});
+
+volumeSlider.addEventListener('input', updateVolumes);
+
+languageSelect.addEventListener('change', (e) => {
+    currentLanguage = e.target.value;
+    applyLanguage(currentLanguage);
+});
+
 gameLoop();
+applyLanguage('de');

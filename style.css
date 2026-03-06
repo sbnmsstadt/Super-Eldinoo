@@ -71,6 +71,75 @@ canvas {
     display: none !important;
 }
 
+#settings-screen {
+    background: rgba(22, 27, 34, 0.95);
+    padding: 2.5rem;
+    border-radius: 12px;
+    text-align: center;
+    pointer-events: auto;
+    border: 3px solid var(--accent-color);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    min-width: 300px;
+}
+
+.settings-group {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.settings-group label {
+    font-size: 1.1rem;
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+#volume-slider {
+    width: 100%;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+}
+
+#language-select {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 2px solid var(--accent-color);
+    padding: 8px 12px;
+    font-size: 1rem;
+    border-radius: 4px;
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+#settings-button {
+    font-size: 1.5rem;
+    padding: 10px 15px;
+}
+
+#pause-button {
+    position: absolute;
+    top: 50px;
+    right: 15px;
+    z-index: 20;
+    font-size: 1.5rem;
+    padding: 8px 12px;
+    background: rgba(22, 27, 34, 0.6);
+    border: 2px solid var(--accent-color);
+    color: var(--accent-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    pointer-events: auto;
+}
+
+#pause-button:hover {
+    background: rgba(22, 27, 34, 0.9);
+    transform: scale(1.1);
+}
+
 h1 {
     font-family: 'Orbitron', sans-serif;
     color: var(--accent-color);

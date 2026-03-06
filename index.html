@@ -15,9 +15,11 @@
         <canvas id="gameCanvas" width="800" height="480"></canvas>
 
         <div id="hud">
-            <div>SCORE: <span id="score">0</span></div>
-            <div>COINS: <span id="coins">0</span></div>
+            <div><span id="score-label">SCORE</span>: <span id="score">0</span></div>
+            <div><span id="coins-label">COINS</span>: <span id="coins">0</span></div>
         </div>
+
+        <button id="pause-button" class="hidden">⏸</button>
 
         <div id="ui-overlay">
             <div id="start-screen">
@@ -26,19 +28,40 @@
                 <div class="button-group">
                     <button id="start-button-1">1 SPIELER</button>
                     <button id="start-button-2">2 SPIELER</button>
+                    <button id="settings-button">⚙️</button>
                 </div>
+            </div>
+
+            <div id="settings-screen" class="hidden">
+                <h2 id="settings-title">EINSTELLUNGEN</h2>
+                <div class="settings-group">
+                    <label for="volume-slider" id="label-volume">Lautstärke Musik</label>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.35">
+                </div>
+                <div class="settings-group">
+                    <label for="language-select" id="label-language">Sprache</label>
+                    <select id="language-select">
+                        <option value="de">Deutsch</option>
+                        <option value="en">English</option>
+                        <option value="bs">Bosanski</option>
+                        <option value="ro">Română</option>
+                        <option value="sr">Srpski</option>
+                        <option value="tr">Türkçe</option>
+                    </select>
+                </div>
+                <button id="settings-back-button">ZURÜCK</button>
             </div>
 
             <div id="game-over-screen" class="hidden">
                 <h2>GAME OVER</h2>
-                <p>Dein Score: <span id="final-score">0</span></p>
+                <p><span id="final-score-label">Dein Score</span>: <span id="final-score">0</span></p>
                 <button id="restart-button">ERNEUT VERSUCHEN</button>
             </div>
 
             <div id="win-screen" class="hidden">
                 <h2>SIEG!</h2>
-                <p>Du hast es geschafft!</p>
-                <p>Dein Score: <span id="win-score">0</span></p>
+                <p id="win-message">Du hast es geschafft!</p>
+                <p><span id="win-score-label">Dein Score</span>: <span id="win-score">0</span></p>
                 <button id="win-restart-button">NOCHMAL SPIELEN</button>
             </div>
         </div>
