@@ -172,6 +172,12 @@ let coins = 0;
 let isGameOver = false;
 let isGameRunning = false;
 let cameraX = 0;
+let currentLevel = 1;
+let players = [];
+let isTwoPlayerMode = false;
+let enemies = [];
+let clouds = [];
+let buildings = [];
 
 // Assets
 const marioImg = new Image();
@@ -186,6 +192,8 @@ const monsterImg = new Image();
 monsterImg.src = 'assets/monster.png';
 const houseImg = new Image();
 houseImg.src = 'assets/house_tile.png';
+const schoolImg = new Image();
+schoolImg.src = 'assets/school.png';
 
 // Audio assets
 const jumpSound = new Audio('sounds/jump.mp3');
@@ -212,76 +220,81 @@ window.addEventListener('keyup', e => keys[e.code] = false);
 // Initial map (400 columns) - to be extended programmatically
 const map = [];
 function initMap() {
+    // Clear and re-init map columns
+    const cols = 400;
     for (let r = 0; r < 15; r++) {
-        map[r] = new Array(400).fill(0);
+        map[r] = new Array(cols).fill(0);
     }
 
-    // Procedural generation across 400 columns
-    for (let c = 0; c < 400; c++) {
-        // Ground (with some holes/pits)
-        // Ensure starting area is safe
-        if (c < 10 || c > 390) {
+    // Procedural generation for Level 1
+    for (let c = 0; c < cols; c++) {
+        // Ground (with solid start/end)
+        if (c < 15 || (c > 380 && c < cols)) {
             map[13][c] = 1;
             map[14][c] = 1;
-        } else if (map[13][c - 1] === 1) { // If previous was ground
-            if (Math.random() > 0.12) { // 88% chance to continue ground
-                map[13][c] = 1;
-                map[14][c] = 1;
-            } else { // Start a gap
-                let gapWidth = 2 + Math.floor(Math.random() * 2); // 2-3 tiles wide
-                c += gapWidth;
-                // After gap, ensure we have ground again
-                if (c < 400) {
+        } else {
+            // Procedural ground with gaps
+            if (map[13][c - 1] === 1) {
+                if (Math.random() > 0.15) { // 85% chance to continue
                     map[13][c] = 1;
                     map[14][c] = 1;
+                } else {
+                    // Create a gap
+                    let gapWidth = 2 + Math.floor(Math.random() * 2);
+                    for (let g = 0; g < gapWidth; g++) {
+                        if (c + g < cols) {
+                            map[13][c + g] = 0;
+                            map[14][c + g] = 0;
+                        }
+                    }
+                    c += gapWidth;
+                    // Ensure ground after gap
+                    if (c < cols) {
+                        map[13][c] = 1;
+                        map[14][c] = 1;
+                    }
                 }
-            }
-        } else {
-            map[13][c] = 1;
-            map[14][c] = 1;
-        }
-
-        // Random Features
-        if (c > 5 && c % 12 === 0) { // Pipes
-            if (map[13][c] === 1) { // Only place pipe on ground
-                map[11][c] = 3;
-                map[12][c] = 3;
-                if (Math.random() > 0.5) map[10][c] = 4; // Coin on top of some pipes
+            } else {
+                map[13][c] = 1;
+                map[14][c] = 1;
             }
         }
 
-        if (c > 2 && c % 8 === 0) { // Platforms / Bricks
+        // Pipes and Bricks
+        if (c > 5 && c < 370 && c % 12 === 0 && map[13][c] === 1) {
+            map[11][c] = 3;
+            map[12][c] = 3;
+            if (Math.random() > 0.5) map[10][c] = 4;
+        }
+        if (c > 2 && c < 370 && c % 8 === 0) {
             let h = 7 + Math.floor(Math.random() * 3);
             let len = 2 + Math.floor(Math.random() * 4);
             for (let i = 0; i < len; i++) {
-                if (c + i < 400) {
+                if (c + i < cols) {
                     map[h][c + i] = 2;
-                    if (Math.random() > 0.7) map[h - 1][c + i] = 4; // Coin on top
+                    if (Math.random() > 0.7) map[h - 1][c + i] = 4;
                 }
             }
         }
-
-        if (c > 30 && c % 45 === 0 && map[13][c] === 1) { // Houses
+        // Background Houses
+        if (c > 30 && c < 350 && c % 45 === 0 && map[13][c] === 1) {
             let houseWidth = 3 + Math.floor(Math.random() * 3);
             let houseHeight = 4 + Math.floor(Math.random() * 3);
             for (let h = 0; h < houseHeight; h++) {
                 for (let w = 0; w < houseWidth; w++) {
-                    if (c + w < 400) {
-                        map[12 - h][c + w] = 6; // House tile
-                    }
-                }
-            }
-            // Add a roof (optional detail)
-            for (let w = -1; w <= houseWidth; w++) {
-                if (c + w >= 0 && c + w < 400) {
-                    map[12 - houseHeight][c + w] = 6;
+                    if (c + w < cols) map[12 - h][c + w] = 6;
                 }
             }
         }
     }
+    // Place School Building at the end of Level 1
+    const schoolPos = 375; // Moved slightly back to fit 20 tiles
+    for (let r = 0; r <= 12; r++) {
+        for (let c = schoolPos; c < schoolPos + 20; c++) {
+            if (c < cols) map[r][c] = 7; // School building tiles
+        }
+    }
 }
-initMap();
-
 function applyLanguage(lang) {
     const t = translations[lang];
     document.querySelector('h1').innerText = t.title;
@@ -308,8 +321,19 @@ function applyLanguage(lang) {
     document.getElementById('coins-label').innerText = t.coins;
 }
 
-let players = [];
-let isTwoPlayerMode = false;
+function setupInitialState() {
+    initMap(1);
+    initClouds();
+    initBuildings();
+
+    // Create a dummy player state for the start screen
+    players = [createPlayer(100, 350, marioImg, {
+        up: 'KeyW',
+        left: 'KeyA',
+        right: 'KeyD'
+    })];
+}
+
 
 function createPlayer(x, y, img, controls) {
     return {
@@ -407,12 +431,9 @@ class FlyingEnemy extends Enemy {
             this.dx *= -1;
         }
 
-        // World boundaries
         if (this.x < 0) this.dx = Math.abs(this.dx);
     }
 }
-
-let enemies = [];
 
 class Cloud {
     constructor(x, y, scale) {
@@ -431,8 +452,6 @@ class Cloud {
         ctx.fill();
     }
 }
-
-let clouds = [];
 
 function initClouds() {
     clouds = [];
@@ -489,8 +508,6 @@ class Building {
     }
 }
 
-let buildings = [];
-
 function initBuildings() {
     buildings = [];
     const colors = ['#2c3e50', '#34495e', '#1a252f', '#2c2c2c'];
@@ -511,6 +528,7 @@ function initBuildings() {
 function resetGame(twoPlayer = false) {
     score = 0;
     coins = 0;
+    currentLevel = 1;
     isGameOver = false;
     isGameRunning = true;
     isPaused = false;
@@ -520,7 +538,6 @@ function resetGame(twoPlayer = false) {
     pauseBtn.classList.remove('hidden');
 
     players = [];
-    // P1 Mario (WASD)
     players.push(createPlayer(100, 350, marioImg, {
         up: 'KeyW',
         left: 'KeyA',
@@ -528,7 +545,6 @@ function resetGame(twoPlayer = false) {
     }));
 
     if (isTwoPlayerMode) {
-        // P2 Luigi (Arrows)
         players.push(createPlayer(150, 350, luigiImg, {
             up: 'ArrowUp',
             left: 'ArrowLeft',
@@ -542,7 +558,9 @@ function resetGame(twoPlayer = false) {
     gameOverScreen.classList.add('hidden');
     winScreen.classList.add('hidden');
 
-    // Spawn enemies across the 400 columns
+    initMap();
+
+    // Spawn enemies
     enemies = [];
     for (let i = 0; i < 25; i++) {
         let ex = 500 + i * 500 + Math.random() * 200;
@@ -553,20 +571,11 @@ function resetGame(twoPlayer = false) {
         }
     }
 
-    // Initialize clouds and buildings
     initClouds();
     initBuildings();
 
-    // Start background music
     bgMusic.currentTime = 0;
     bgMusic.play().catch(e => console.log("Audio play blocked:", e));
-
-    // Reiniciar mapa para monedas
-    for (let r = 0; r < map.length; r++) {
-        for (let c = 0; c < map[r].length; c++) {
-            if (map[r][c] === 5) map[r][c] = 4; // Reset collected coins (stored as 5 internally)
-        }
-    }
 }
 
 function update() {
@@ -603,9 +612,12 @@ function update() {
         // Death by falling
         if (player.y > CANVAS_HEIGHT) endGame();
 
-        // Win condition
-        if (player.x > (map[0].length * TILE_SIZE) - 150) {
-            winGame();
+        // Level Transition
+        if (currentLevel === 1) {
+            const doorCol = 375 + 10; // Center of 20-tile building
+            if (player.x > doorCol * TILE_SIZE && player.x < (doorCol + 2) * TILE_SIZE && player.grounded) {
+                window.location.href = `level2.html?score=${score}&coins=${coins}&twoPlayer=${isTwoPlayerMode}`;
+            }
         }
     });
 
@@ -663,7 +675,7 @@ function checkCollisions(player) {
             if (!map[r] || !map[r][c]) continue;
 
             const tileType = map[r][c];
-            if (tileType === 0 || tileType === 5) continue; // Air or collected coin
+            if (tileType === 0 || tileType === 5 || tileType === 7) continue; // Air, collected coin, or school building background
 
             const tx = c * TILE_SIZE;
             const ty = r * TILE_SIZE;
@@ -714,14 +726,18 @@ function draw() {
     ctx.save();
 
     // Draw sky background color
-    ctx.fillStyle = '#87CEEB';
+    if (currentLevel === 1) {
+        ctx.fillStyle = '#87CEEB'; // Sky blue
+    } else {
+        ctx.fillStyle = '#2c3e50'; // Darker "interior" blue/gray
+    }
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Draw Clouds (Background)
-    clouds.forEach(cloud => cloud.draw());
-
-    // Draw Buildings (City Background)
-    buildings.forEach(building => building.draw());
+    // Draw Clouds (Background) - only if Level 1
+    if (currentLevel === 1) {
+        clouds.forEach(cloud => cloud.draw());
+        buildings.forEach(building => building.draw());
+    }
 
     ctx.translate(-cameraX, 0);
 
@@ -735,34 +751,36 @@ function draw() {
                 if (coinImg.complete) {
                     ctx.drawImage(coinImg, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 } else {
-                    // Fallback yellow circle
                     ctx.fillStyle = '#FFD700';
                     ctx.beginPath();
                     ctx.arc(c * TILE_SIZE + TILE_SIZE / 2, r * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
                     ctx.fill();
                 }
+            } else if (tile === 7) {
+                // School building area in Level 1
+                if (c === 375 && r === 0 && schoolImg.complete) {
+                    // Draw school image (640x407 px)
+                    // Bottom of building at tile 13 (416px)
+                    ctx.drawImage(schoolImg, 375 * TILE_SIZE, 416 - 407, 640, 407);
+                } else if (!schoolImg.complete) {
+                    ctx.fillStyle = '#F08080';
+                    ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
             } else {
-                // Determine source coordinates from tilesImg (assuming 1x3 grid for ground, brick, pipe)
-                // If the generated image is complex, we might need adjustments
+                // Determine source coordinates from tilesImg
                 let sx = 0;
                 if (tile === 1) sx = 0;      // Ground
                 if (tile === 2) sx = 32;     // Brick
                 if (tile === 3) sx = 64;     // Pipe
 
-                // Check if tilesImg width is enough, otherwise fallback to color
                 if (tilesImg.complete && tilesImg.width >= (sx + 32)) {
                     ctx.drawImage(tilesImg, sx, 0, 32, 32, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 } else if (tile === 6) { // House
                     if (houseImg.complete) {
                         ctx.drawImage(houseImg, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     } else {
-                        ctx.fillStyle = '#A52A2A'; // Brown/Red for house
+                        ctx.fillStyle = '#A52A2A';
                         ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        // Add some "window" details
-                        if ((c + r) % 2 === 0) {
-                            ctx.fillStyle = '#87CEEB';
-                            ctx.fillRect(c * TILE_SIZE + 8, r * TILE_SIZE + 8, 16, 16);
-                        }
                     }
                 } else {
                     ctx.fillStyle = tile === 1 ? '#8B4513' : (tile === 2 ? '#B22222' : '#228B22');
@@ -852,5 +870,6 @@ languageSelect.addEventListener('change', (e) => {
     applyLanguage(currentLanguage);
 });
 
+setupInitialState();
 gameLoop();
 applyLanguage('de');

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Eldinooo - Level 2</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #gameCanvas {
+            background-color: #2c3e50;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SUPER ELDINOOO - LEVEL 2</h1>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="480"></canvas>
+
+        <div id="hud">
+            <div>SCORE: <span id="score">0</span></div>
+            <div>COINS: <span id="coins">0</span></div>
+        </div>
+
+        <button id="pause-button" class="hidden">⏸</button>
+
+        <div id="ui-overlay">
+            <div id="settings-screen" class="hidden">
+                <h2 id="settings-title">EINSTELLUNGEN</h2>
+                <div class="settings-group">
+                    <label for="volume-slider">Lautstärke Musik</label>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.35">
+                </div>
+                <button id="settings-back-button">ZURÜCK</button>
+            </div>
+
+            <div id="game-over-screen" class="hidden">
+                <h2>GAME OVER</h2>
+                <p>Dein Score: <span id="final-score">0</span></p>
+                <button id="restart-button">ERNEUT VERSUCHEN</button>
+            </div>
+
+            <div id="win-screen" class="hidden">
+                <h2>SIEG!</h2>
+                <p id="win-message">Du hast die Schule gemeistert!</p>
+                <p>Dein Score: <span id="win-score">0</span></p>
+                <button id="win-restart-button">NOCHMAL SPIELEN</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="level2.js"></script>
+</body>
+
+</html>
