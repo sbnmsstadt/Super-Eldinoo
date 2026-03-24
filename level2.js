@@ -32,12 +32,18 @@ let cameraX = 0;
 let players = [];
 let enemies = [];
 const map = [];
+let peer = null;
+let conn = null;
+let isHost = false;
+let joinId = null;
 
 // Get parameters from URL
 const urlParams = new URLSearchParams(window.location.search);
 score = parseInt(urlParams.get('score')) || 0;
 coins = parseInt(urlParams.get('coins')) || 0;
 const isTwoPlayer = urlParams.get('twoPlayer') === 'true';
+isHost = urlParams.get('isHost') === 'true';
+joinId = urlParams.get('join');
 
 // Assets
 const marioImg = new Image();
@@ -183,9 +189,13 @@ function resetLevel() {
     isGameRunning = true;
     cameraX = 0;
     initMap();
-    players = [createPlayer(100, 310, marioImg, { up: 'KeyW', left: 'KeyA', right: 'KeyD' })];
+    players = [];
+    const p1Controls = (conn && !isHost) ? { up: 'ArrowUp', left: 'ArrowLeft', right: 'ArrowRight' } : { up: 'KeyW', left: 'KeyA', right: 'KeyD' };
+    players.push(createPlayer(100, 310, marioImg, p1Controls));
+
     if (isTwoPlayer) {
-        players.push(createPlayer(150, 310, luigiImg, { up: 'ArrowUp', left: 'ArrowLeft', right: 'ArrowRight' }));
+        const p2Controls = (conn && !isHost) ? { up: 'KeyW', left: 'KeyA', right: 'KeyD' } : { up: 'ArrowUp', left: 'ArrowLeft', right: 'ArrowRight' };
+        players.push(createPlayer(150, 310, luigiImg, p2Controls));
     }
     enemies = [];
     for (let i = 0; i < 15; i++) {
@@ -240,18 +250,40 @@ function checkCollisions(player) {
 
 function update() {
     if (!isGameRunning || isPaused || isGameOver) return;
-    players.forEach(p => {
+    players.forEach((p, index) => {
         if (!p.alive) return;
-        if (keys[p.controls.right]) p.dx = MOVE_SPEED;
-        else if (keys[p.controls.left]) p.dx = -MOVE_SPEED;
-        else p.dx = 0;
-        if (keys[p.controls.up] && p.grounded) { p.dy = JUMP_FORCE; p.grounded = false; jumpSound.play().catch(() => { }); }
+
+        const isLocal = !conn || (isHost && index === 0) || (!isHost && index === 1);
+
+        if (isLocal) {
+            if (keys[p.controls.right]) p.dx = MOVE_SPEED;
+            else if (keys[p.controls.left]) p.dx = -MOVE_SPEED;
+            else p.dx = 0;
+            if (keys[p.controls.up] && p.grounded) { p.dy = JUMP_FORCE; p.grounded = false; jumpSound.play().catch(() => { }); }
+        }
         p.dy += GRAVITY; p.x += p.dx; p.y += p.dy;
         if (p.x < 0) p.x = 0;
         checkCollisions(p);
         if (p.y > CANVAS_HEIGHT) endGame();
         if (p.x > (map[0].length * TILE_SIZE) - 200) winGame();
     });
+
+    // Multiplayer Data Sync
+    if (conn && conn.open) {
+        const localPlayer = isHost ? players[0] : players[1];
+        if (localPlayer) {
+            conn.send({
+                type: 'pos',
+                x: localPlayer.x,
+                y: localPlayer.y,
+                dx: localPlayer.dx,
+                dy: localPlayer.dy,
+                isBig: localPlayer.isBig,
+                alive: localPlayer.alive
+            });
+        }
+    }
+
     enemies.forEach(e => {
         e.update();
         players.forEach(p => {
@@ -339,6 +371,52 @@ pauseBtn.addEventListener('click', () => { isPaused = !isPaused; settingsScreen.
 settingsBackBtn.addEventListener('click', () => { isPaused = false; settingsScreen.classList.add('hidden'); });
 winRestartBtn.addEventListener('click', () => window.location.href = 'index.html');
 restartBtn.addEventListener('click', () => window.location.href = 'index.html');
+
+// Multiplayer Logic for Level 2
+function initPeer() {
+    // If hosting, we try to use the same ID we had in Level 1 (if it was passed)
+    // or just a new one and let the other join via the ID in the URL.
+    peer = new Peer();
+
+    peer.on('open', (id) => {
+        console.log('Level 2 Peer ID:', id);
+        if (!isHost && joinId) {
+            // Client joins the host
+            conn = peer.connect(joinId);
+            setupConnection();
+        }
+    });
+
+    peer.on('connection', (connection) => {
+        console.log('Incoming connection in Level 2...');
+        conn = connection;
+        setupConnection();
+    });
+}
+
+function setupConnection() {
+    conn.on('open', () => {
+        console.log('Level 2 Multiplayer Connected!');
+    });
+
+    conn.on('data', (data) => {
+        if (data.type === 'pos') {
+            const remotePlayer = isHost ? players[1] : players[0];
+            if (remotePlayer) {
+                remotePlayer.x = data.x;
+                remotePlayer.y = data.y;
+                remotePlayer.dx = data.dx;
+                remotePlayer.dy = data.dy;
+                remotePlayer.isBig = data.isBig;
+                remotePlayer.alive = data.alive;
+            }
+        }
+    });
+}
+
+if (isTwoPlayer && joinId) {
+    initPeer();
+}
 
 resetLevel();
 gameLoop();

@@ -28,7 +28,17 @@
                 <div class="button-group">
                     <button id="start-button-1">1 SPIELER</button>
                     <button id="start-button-2">2 SPIELER</button>
+                    <button id="host-button">HOST MULTIPLAYER</button>
                     <button id="settings-button">⚙️</button>
+                </div>
+                <div id="invite-container" class="hidden"
+                    style="margin-top: 15px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px;">
+                    <p style="margin: 0 0 5px 0;">Dein Invite-Link:</p>
+                    <input type="text" id="invite-link" readonly
+                        style="width: 80%; padding: 5px; font-family: monospace;">
+                    <button id="copy-link-button" style="padding: 5px 10px; font-size: 14px;">KOPIEREN</button>
+                    <p id="invite-status" style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">Warte auf Spieler
+                        2...</p>
                 </div>
             </div>
 
@@ -66,7 +76,7 @@
             </div>
         </div>
     </div>
-
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="game.js"></script>
 </body>
 

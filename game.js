@@ -17,6 +17,17 @@ const settingsBackBtn = document.getElementById('settings-back-button');
 const volumeSlider = document.getElementById('volume-slider');
 const languageSelect = document.getElementById('language-select');
 const pauseBtn = document.getElementById('pause-button');
+const hostBtn = document.getElementById('host-button');
+const inviteContainer = document.getElementById('invite-container');
+const inviteLinkInput = document.getElementById('invite-link');
+const copyLinkBtn = document.getElementById('copy-link-button');
+const inviteStatus = document.getElementById('invite-status');
+
+// Multiplayer state
+let peer = null;
+let conn = null;
+let isHost = false;
+let multiplayerJoined = false;
 
 // Translation data
 const translations = {
@@ -545,11 +556,18 @@ function resetGame(twoPlayer = false) {
     }));
 
     if (isTwoPlayerMode) {
-        players.push(createPlayer(150, 350, luigiImg, {
+        // If we are the client, we want to use WASD for Luigi too.
+        // If we are local 2-player, we use Arrows for P2.
+        const p2Controls = (conn && !isHost) ? {
+            up: 'KeyW',
+            left: 'KeyA',
+            right: 'KeyD'
+        } : {
             up: 'ArrowUp',
             left: 'ArrowLeft',
             right: 'ArrowRight'
-        }));
+        };
+        players.push(createPlayer(150, 350, luigiImg, p2Controls));
     }
 
     scoreEl.innerText = score;
@@ -581,19 +599,23 @@ function resetGame(twoPlayer = false) {
 function update() {
     if (!isGameRunning || isGameOver || isPaused) return;
 
-    players.forEach(player => {
+    players.forEach((player, index) => {
         if (!player.alive) return;
 
-        // Movement
-        if (keys[player.controls.right]) player.dx = MOVE_SPEED;
-        else if (keys[player.controls.left]) player.dx = -MOVE_SPEED;
-        else player.dx = 0;
+        // Multiplayer: Only move local player with keyboard
+        const isLocal = !conn || (isHost && index === 0) || (!isHost && index === 1);
 
-        if (keys[player.controls.up] && player.grounded) {
-            player.dy = JUMP_FORCE;
-            player.grounded = false;
-            jumpSound.currentTime = 0;
-            jumpSound.play().catch(e => console.log("Audio play blocked:", e));
+        if (isLocal) {
+            if (keys[player.controls.right]) player.dx = MOVE_SPEED;
+            else if (keys[player.controls.left]) player.dx = -MOVE_SPEED;
+            else player.dx = 0;
+
+            if (keys[player.controls.up] && player.grounded) {
+                player.dy = JUMP_FORCE;
+                player.grounded = false;
+                jumpSound.currentTime = 0;
+                jumpSound.play().catch(e => console.log("Audio play blocked:", e));
+            }
         }
 
         // Apply gravity
@@ -616,10 +638,32 @@ function update() {
         if (currentLevel === 1) {
             const doorCol = 375 + 10; // Center of 20-tile building
             if (player.x > doorCol * TILE_SIZE && player.x < (doorCol + 2) * TILE_SIZE && player.grounded) {
-                window.location.href = `level2.html?score=${score}&coins=${coins}&twoPlayer=${isTwoPlayerMode}`;
+                let url = `level2.html?score=${score}&coins=${coins}&twoPlayer=${isTwoPlayerMode}`;
+                if (conn && conn.open) {
+                    // Send a message to the other player to move to level 2 as well
+                    conn.send({ type: 'next-level', score, coins });
+                    url += `&join=${isHost ? peer.id : joinId}&isHost=${isHost}`;
+                }
+                window.location.href = url;
             }
         }
     });
+
+    // Multiplayer Data Sync
+    if (conn && conn.open) {
+        const localPlayer = isHost ? players[0] : players[1];
+        if (localPlayer) {
+            conn.send({
+                type: 'pos',
+                x: localPlayer.x,
+                y: localPlayer.y,
+                dx: localPlayer.dx,
+                dy: localPlayer.dy,
+                isBig: localPlayer.isBig,
+                alive: localPlayer.alive
+            });
+        }
+    }
 
     enemies.forEach(enemy => {
         enemy.update();
@@ -869,6 +913,90 @@ languageSelect.addEventListener('change', (e) => {
     currentLanguage = e.target.value;
     applyLanguage(currentLanguage);
 });
+
+// Multiplayer Logic
+function initPeer() {
+    peer = new Peer();
+    peer.on('open', (id) => {
+        console.log('Peer ID is: ' + id);
+        if (isHost) {
+            const url = window.location.origin + window.location.pathname + '?join=' + id;
+            inviteLinkInput.value = url;
+            inviteContainer.classList.remove('hidden');
+        }
+    });
+
+    peer.on('connection', (connection) => {
+        console.log('Incoming connection...');
+        conn = connection;
+        setupConnection();
+    });
+
+    peer.on('error', (err) => {
+        console.error('Peer error:', err);
+        inviteStatus.innerText = "Fehler: " + err.type;
+    });
+}
+
+function setupConnection() {
+    conn.on('open', () => {
+        console.log('Connected to peer!');
+        inviteStatus.innerText = "Verbunden! Starte Spiel...";
+        multiplayerJoined = true;
+
+        // Start game for both
+        setTimeout(() => resetGame(true), 1000);
+    });
+
+    conn.on('data', (data) => {
+        if (data.type === 'pos') {
+            const remotePlayer = isHost ? players[1] : players[0];
+            if (remotePlayer) {
+                remotePlayer.x = data.x;
+                remotePlayer.y = data.y;
+                remotePlayer.dx = data.dx;
+                remotePlayer.dy = data.dy;
+                remotePlayer.isBig = data.isBig;
+                remotePlayer.alive = data.alive;
+            }
+        } else if (data.type === 'next-level') {
+            window.location.href = `level2.html?score=${data.score}&coins=${data.coins}&twoPlayer=true&join=${isHost ? peer.id : joinId}&isHost=${isHost}`;
+        }
+    });
+
+    conn.on('close', () => {
+        console.log('Connection closed');
+        inviteStatus.innerText = "Verbindung verloren.";
+    });
+}
+
+hostBtn.addEventListener('click', () => {
+    isHost = true;
+    hostBtn.disabled = true;
+    inviteStatus.innerText = "Erstelle Peer...";
+    initPeer();
+});
+
+copyLinkBtn.addEventListener('click', () => {
+    inviteLinkInput.select();
+    document.execCommand('copy');
+    copyLinkBtn.innerText = "KOPIERT!";
+    setTimeout(() => copyLinkBtn.innerText = "KOPIEREN", 2000);
+});
+
+// Check if joining
+const urlParams = new URLSearchParams(window.location.search);
+const joinId = urlParams.get('join');
+if (joinId) {
+    console.log('Joining session:', joinId);
+    isHost = false;
+    isTwoPlayerMode = true;
+    initPeer();
+    peer.on('open', () => {
+        conn = peer.connect(joinId);
+        setupConnection();
+    });
+}
 
 setupInitialState();
 gameLoop();
